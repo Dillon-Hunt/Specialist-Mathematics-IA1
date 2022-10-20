@@ -5,9 +5,15 @@
 //
 
 // Import libraries
-const { multiply, add, number } = require('mathjs')
+const { multiply, add } = require('mathjs')
 const { readFile } = require('fs')
 const readline = require('readline').createInterface({ input: process.stdin, output: process.stdout });
+
+// Constants
+
+const MAX_VALUE = 40 // Model A: 1
+const MAX_DEGREE = 16 // Set to null for distinguishable
+const HOME_BONUS = 0.21 // Model C
 
 // Initialize teams variable
 let teams = [] // Teams: 'PE', 'CR', 'NQC', 'NK', 'SSR', 'PP', 'MWSE', 'SGID', 'CBB', 'GCT', 'BB', 'NZW', 'CSS', 'SR', 'MS', 'WT'
@@ -15,7 +21,7 @@ let teams = [] // Teams: 'PE', 'CR', 'NQC', 'NK', 'SSR', 'PP', 'MWSE', 'SGID', '
 // Get's dominance vector from dominance matrix by adding up each row.
 function getVector(dominance_matrix) {
     return dominance_matrix.map(row => {
-        return row.reduce((a, b) => number(a) + number(b))
+        return row.reduce((a, b) => a + b)
     })
 }
 
@@ -44,9 +50,22 @@ function askTeams(results) {
             // Split 'PP-NQC' into ['PP', 'NQC']
             teams = teams.split('-')
 
-            // Get winner
-            if (results[teams[0]] > results[teams[1]]) console.log(`Team ${teams[0]} should win.\n`)
-            else console.log(`Team ${teams[1]} should win.`)
+            if (teams.length === 2) {
+                // Get winner
+                if (results[teams[0]] > results[teams[1]]) console.log(`Team ${teams[0]} should win.\n`)
+                else if (results[teams[1]] > results[teams[0]]) console.log(`Team ${teams[1]} should win.`)
+                else console.log('Please input valid teams.')
+            } else {
+                if (teams[0] === teams[2]) {
+                    if (results[teams[0]] + HOME_BONUS > results[teams[1]]) console.log(`Team ${teams[0]} should win.\n`)
+                    else if (results[teams[1]] > results[teams[0]] + HOME_BONUS) console.log(`Team ${teams[1]} should win.`)
+                    else console.log('Please input valid teams.')
+                } else if (teams[1] === teams[2]) {
+                    if (results[teams[0]] > results[teams[1]] + HOME_BONUS) console.log(`Team ${teams[0]} should win.\n`)
+                    else if (results[teams[1]] + HOME_BONUS > results[teams[0]]) console.log(`Team ${teams[1]} should win.`)
+                    else console.log('Please input valid teams.')
+                }
+            }
 
             // Continue Loop
             askTeams(results)
@@ -67,10 +86,30 @@ async function calculate() {
 
                 rows = csv
         
-                rows.forEach((row, id) => {
-                    rows[id] = row.split(',')
-            
+                let max = 0
+
+                rows.forEach((_, row_id) => {
+                    rows[row_id] = rows[row_id].split(',')
+
+                    rows[row_id].forEach((_, column_id) => {
+                        if (rows[row_id][column_id] > MAX_VALUE) {
+                            rows[row_id][column_id] = MAX_VALUE
+                            max = MAX_VALUE
+                        } 
+                    })
+
+                    if (max < Math.max(...rows[row_id])) {
+                        max = Math.max(...rows[row_id])
+                    }
                 });
+
+                rows.forEach((_, row_id) => {
+
+                    rows[row_id].forEach((_, column_id) => {
+                        rows[row_id][column_id] /= max 
+                    })
+
+                })
             
                 resolve(rows)
             })
@@ -86,15 +125,22 @@ async function calculate() {
     }
 
     // Initialize resultant vector
-    let resultant_vector = multiply(vector_orders[0], vector_orders.length)
+    let resultant_vector = MAX_DEGREE === null ? multiply(vector_orders[0], vector_orders.length) : vector_orders[0]
 
     // While the resultant vector is not distinct, add next order multiplied by 16 - n
     {
         let i = 0
 
-        while (resultant_vector.length !== new Set(resultant_vector).size) {
-            i++
-            resultant_vector = add(resultant_vector, multiply(vector_orders[i], vector_orders.length - i))
+        if (MAX_DEGREE === null) {
+            while (resultant_vector.length !== new Set(resultant_vector).size) {
+                i++
+                resultant_vector = multiply(vector_orders[i], vector_orders.length - i)
+            }
+        } else {
+            while (resultant_vector.length !== new Set(resultant_vector).size || i < MAX_DEGREE - 2) {
+                i++
+                resultant_vector = add(resultant_vector, vector_orders[i]) // multiply(vector_orders[i], vector_orders.length - i)
+            }
         }
     }
 
@@ -112,7 +158,7 @@ async function calculate() {
     // Sort results then print and construct results object
     const sorted_results = results.sort((a, b) => b[0] - a[0])
     sorted_results.forEach(team => results_object[team[1]] = team[0])
-    sorted_results.forEach((team, index) => console.log(`${index + 1}: ${(index + 1).toString().length > 1 ? '' : ' '}${team[1]}`))
+    sorted_results.forEach((team, index) => console.log(`${index + 1}: ${(index + 1).toString().length > 1 ? '' : ' '}${team[1]}: ${team[0]}`)) // : ${team[0]}
 
     // Ask for two teams to compare
     askTeams(results_object)
