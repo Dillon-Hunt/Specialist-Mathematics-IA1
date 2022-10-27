@@ -13,7 +13,7 @@ const readline = require('readline').createInterface({ input: process.stdin, out
 
 const MAX_VALUE = 40 // Model A: 1
 const MAX_DEGREE = 16 // Set to null for distinguishable
-const HOME_BONUS = 0.21 // Model C
+const HOME_BONUS = 2.5 // Model C
 
 // Initialize teams variable
 let teams = [] // Teams: 'PE', 'CR', 'NQC', 'NK', 'SSR', 'PP', 'MWSE', 'SGID', 'CBB', 'GCT', 'BB', 'NZW', 'CSS', 'SR', 'MS', 'WT'
@@ -139,7 +139,7 @@ async function calculate() {
         } else {
             while (resultant_vector.length !== new Set(resultant_vector).size || i < MAX_DEGREE - 2) {
                 i++
-                resultant_vector = add(resultant_vector, vector_orders[i]) // multiply(vector_orders[i], vector_orders.length - i)
+                resultant_vector = add(resultant_vector, vector_orders[i])
             }
         }
     }
