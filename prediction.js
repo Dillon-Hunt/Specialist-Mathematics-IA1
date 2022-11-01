@@ -12,7 +12,7 @@ const readline = require('readline').createInterface({ input: process.stdin, out
 // Constants
 
 const MAX_VALUE = 40 // Model A: 1
-const MAX_DEGREE = 16 // Set to null for distinguishable
+const MAX_DEGREE = 16 // Model A & B: null
 const HOME_BONUS = 2.5 // Model C
 
 // Initialize teams variable
