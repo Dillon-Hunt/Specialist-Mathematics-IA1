@@ -1,7 +1,9 @@
 //
 //    Predicts NRL results based on data 
-//    collected from the first 9 rounds of 2020
-//    as a part of specialist mathematics IA1.
+//    collected from the first 16 rounds of 2020
+//    as a part of Specialist Mathematics IA1.
+//
+//    - Dillon Hunt
 //
 
 // Import libraries
